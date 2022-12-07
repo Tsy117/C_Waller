@@ -183,7 +183,7 @@ ULONG GetTTF_Cmap_Table(FILE* fp, TTF_Table cmap, int index)
 			{
 				if (index >= startCount[j] && index < endCount[j])
 				{
-					return index + (SHORT)idDelta[j];
+					return (USHORT)(index + (SHORT)idDelta[j]);  // 超出范围溢出。导致程序运行异常 中文符号"，"报错。
 				}
 			}
 			else
@@ -236,6 +236,10 @@ int show_char(_Suyu_BMP* img, int x, int y, int font_height, char* filename, wch
 	GetTTF_Head_Table(ttf_fp, tab[head_index], &htable);
 	GetTTF_maxp_Table(ttf_fp, tab[maxp_index], &mtable);
 	ULONG loca_offset = GetTTF_Cmap_Table(ttf_fp, tab[cmap_index], w_c);
+	if (loca_offset == -1)
+	{
+		return -1; // 找不到索引直接退出。
+	}
 	fseek(ttf_fp, tab[hmtx_index].offset + loca_offset * 4, SEEK_SET);
 	fread(buff, 1, 4, ttf_fp);
 	advance_Width = USHORT_L(buff);
